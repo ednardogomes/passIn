@@ -4,8 +4,6 @@
 // ou seja o mês referido na data de inscrição do ednardo
 // é o mês de março.
 
-import dayjs from 'dayjs'
-
 let participantes = [
   {
     name: "Ednardo Gomes",
@@ -17,7 +15,7 @@ let participantes = [
     name: "Maria Pereira",
     email: "maria@gmail.com",
     registrationDate: new Date(2024, 1, 2, 19, 23),
-    checkInDate: new Date(2024, 2, 1, 20, 0),
+    checkInDate: null,
   },
   {
     name: "João Silva",
@@ -41,7 +39,7 @@ let participantes = [
     name: "Fernanda Oliveira",
     email: "fernanda@gmail.com",
     registrationDate: new Date(2024, 1, 28, 8, 15),
-    checkInDate: new Date(2024, 2, 5, 10, 0),
+    checkInDate: null,
   },
   {
     name: "Rafael Lima",
@@ -53,7 +51,7 @@ let participantes = [
     name: "Juliana Costa",
     email: "juliana@gmail.com",
     registrationDate: new Date(2024, 1, 14, 12, 45),
-    checkInDate: new Date(2024, 2, 20, 9, 0),
+    checkInDate: null,
   },
   {
     name: "Pedro Sousa",
@@ -65,23 +63,35 @@ let participantes = [
     name: "Mariana Costa",
     email: "mariana@gmail.com",
     registrationDate: new Date(2024, 0, 5, 18, 0),
-    checkInDate: new Date(2024, 1, 5, 20, 0),
+    checkInDate: null,
   },
 ];
 
-const atualizarLista = (participantes) => {
+const updateList = (participantes) => {
   let output = "";
 
   for (let participante of participantes) {
-    output = output + criarNovoParticipante(participante);
+    output = output + createNewParticipant(participante);
   }
 
   document.querySelector("tbody").innerHTML = output;
 };
 
-const criarNovoParticipante = (participante) => {
+const createNewParticipant = (participante) => {
   const registrationDate = dayjs(Date.now()).to(participante.registrationDate);
-  console.log(registrationDate);
+
+  let checkInDate = dayjs(Date.now()).to(participante.checkInDate);
+
+  if (participante.checkInDate == null) {
+    checkInDate = `
+    <button
+    data-email = "${participante.email}"
+    onclick = "participantCheckIn(event)"
+    >
+    Confirmar check-in
+    </button>
+    `;
+  }
 
   return `
   <tr>
@@ -95,9 +105,51 @@ const criarNovoParticipante = (participante) => {
       </small>
     </td>
       <td>${registrationDate} </td>
-      <td>${participante.checkInDate} </td>
+      <td>${checkInDate} </td>
   </tr>
   `;
 };
 
-atualizarLista(participantes);
+updateList(participantes);
+
+const addParticipant = (event) => {
+  event.preventDefault();
+
+  const formData = new FormData(event.target);
+
+  const participante = {
+    name: formData.get("name"),
+    email: formData.get("email"),
+    registrationDate: formData.get("registrationDate"),
+    checkInDate: null,
+  };
+
+  const checkParticipantExists = participantes.find(
+    (p) => p.email == participante.email
+  );
+
+  if (checkParticipantExists) {
+    alert("Email já cadastrado!");
+    return;
+  }
+
+  participantes = [participante, ...participantes];
+  updateList(participantes);
+
+  event.target.querySelector('[name="name"]').value = "";
+  event.target.querySelector('[name="email"]').value = "";
+};
+
+const participantCheckIn = (event) => {
+  const confirmMessage = "Tem certeza que deseja fazer o check-in?";
+  alert(confirmMessage);
+  if (confirm(confirmMessage) == false) {
+    return;
+  }
+
+  const participante = participantes.find((p) => {
+    return p.email == event.target.dataset.email;
+  });
+  participante.checkInDate = new Date();
+  updateList(participantes);
+};
